@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Track Order{% endblock %}
+
+{% block content %}
+
+<style>
+.track-container {
+    width: 90%;
+    margin: auto;
+    margin-top: 50px;
+}
+
+.progress-wrapper {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    margin-top: 40px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #28a745;
+    border-radius: 4px;
+    transition: width 1s ease-in-out;
+}
+
+.stage-icons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.stage {
+    text-align: center;
+    width: 20%;
+}
+
+.stage i {
+    font-size: 24px;
+    color: #aaa;
+    transition: 0.5s ease-in-out;
+}
+
+.stage.active i {
+    color: #28a745;
+}
+
+#truck {
+    width: 80px;
+    position: absolute;
+    top: -30px;
+    left: 0%;
+    transition: left 1s ease-in-out;
+}
+</style>
+
+<div class="track-container">
+
+    <h2 class="fw-bold mb-4 text-center">🚚 Live Delivery Tracking</h2>
+
+    <div class="progress-wrapper">
+        <div class="progress-bar" id="progress"></div>
+        <img src="{{ url_for('static', filename='images/delivery_truck.png') }}" id="truck">
+    </div>
+
+    <div class="stage-icons mt-4">
+        <div class="stage" id="s1">
+            <i class="bi bi-bag-check-fill"></i><br>Placed
+        </div>
+        <div class="stage" id="s2">
+            <i class="bi bi-check-circle-fill"></i><br>Confirmed
+        </div>
+        <div class="stage" id="s3">
+            <i class="bi bi-box-seam"></i><br>Packed
+        </div>
+        <div class="stage" id="s4">
+            <i class="bi bi-truck"></i><br>On the Way
+        </div>
+        <div class="stage" id="s5">
+            <i class="bi bi-house-fill"></i><br>Delivered
+        </div>
+    </div>
+
+</div>
+
+<script>
+let currentStage = 0;
+
+const progressBar = document.getElementById("progress");
+const truck = document.getElementById("truck");
+const stages = [
+    document.getElementById("s1"),
+    document.getElementById("s2"),
+    document.getElementById("s3"),
+    document.getElementById("s4"),
+    document.getElementById("s5")
+];
+
+function updateTracking() {
+    if (currentStage >= stages.length) return;
+
+    stages[currentStage].classList.add("active");
+
+    const progressPercent = (currentStage) * 25;
+    progressBar.style.width = progressPercent + "%";
+
+    truck.style.left = progressPercent + "%";
+
+    currentStage++;
+}
+
+// Auto-progress every 2 seconds
+setInterval(updateTracking, 2000);
+</script>
+
+{% endblock %}

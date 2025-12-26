@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-4"><b>📦 Inventory Management</b></h3>
+
+  <table class="table table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Actions</th>
+        <th>Discount</th>
+        <th>Update Discount</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.name }}</td>
+        <td>{{ item.category }}</td>
+        <td>₹ {{ item.price }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>
+          <a href="/admin/increase/{{ item.name }}"
+             class="btn btn-sm btn-success">+</a>
+
+          <a href="/admin/decrease/{{ item.name }}"
+             class="btn btn-sm btn-warning">−</a>
+
+          <a href="/admin/delete/{{ item.name }}"
+             class="btn btn-sm btn-danger"
+             onclick="return confirm('Delete item?')">
+             Delete
+          </a>
+          <!-- Show discount badge -->
+        <td>
+          {% if item.discount_percent and item.discount_percent > 0 %}
+            <span class="badge bg-success">{{ item.discount_percent }}%</span>
+          {% else %}
+            <span class="badge bg-secondary">0%</span>
+          {% endif %}
+        </td>
+
+        <!-- Update discount form -->
+        <td>
+          <form action="/admin/update-discount/{{ item.id }}" method="POST" class="d-flex">
+            <input type="number" 
+                   name="discount" 
+                   min="0" 
+                   max="90"
+                   value="{{ item.discount_percent or 0 }}"
+                   class="form-control form-control-sm me-2"
+                   style="width: 80px;">
+            <button class="btn btn-primary btn-sm">Save</button>
+          </form>
+        </td>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a href="/admin/logout" class="btn btn-primary">
+    Logout
+  </a>
+</div>
+{% endblock %}

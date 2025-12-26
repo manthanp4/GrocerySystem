@@ -1,0 +1,687 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+<!-- Home Banner Carousel -->
+<div id="homeCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+
+  <div class="carousel-inner rounded-4 shadow-sm">
+
+
+    <div class="carousel-item active">
+      <img src="{{ url_for('static', filename='images/Banner1.jpg') }}" class="d-block w-100"
+        style="height: 380px; object-fit: cover;" alt="Banner 1">
+    </div>
+
+    <div class="carousel-item">
+      <img src="{{ url_for('static', filename='images/Banner2.jpg') }}" class="d-block w-100"
+        style="height: 380px; object-fit: cover;" alt="Banner 2">
+    </div>
+
+    <div class="carousel-item">
+      <img src="{{ url_for('static', filename='images/Banner3.jpg') }}" class="d-block w-100"
+        style="height: 380px; object-fit: cover;" alt="Banner 3">
+    </div>
+
+  </div>
+
+  <!-- Controls -->
+  <button class="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+
+  <button class="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+
+</div>
+
+
+<h3 class="fw-bold mb-4">Shop by Category</h3>
+
+<div class="position-relative">
+  <div class="search-container mt-3 mb-4">
+    <input type="text" id="searchBox" class="form-control full-search"
+      placeholder="Search for fruits, vegetables, dairy…" autocomplete="off">
+  </div>
+
+
+  <!-- Suggestion Box -->
+  <ul id="suggestions" class="list-group position-absolute w-100" style="z-index: 999; display:none;">
+  </ul>
+</div>
+
+
+{% for category, products in categories.items() %}
+<div class="mb-5">
+  <h5 class="fw-bold">
+    {{ category_icons.get(category, "🛒") }} {{ category }}
+  </h5>
+
+
+  <div class="category-scroll">
+    {% for product in products %}
+    <div class="product-card-wrapper">
+      <div class="product-card text-center shadow-sm p-3">
+        <!-- Discount badge-->
+        {% if product['discount_percent'] and product['discount_percent'] > 0 %}
+        <span class="discount-tag">{{ product['discount_percent'] }}% OFF</span>
+        {% endif %}
+
+
+        <!-- Product Image -->
+        <img src="{{ url_for('static', filename='images/' ~ product['name']|lower|replace(' ', '') ~ '.png') }}"
+          alt="{{ product['name'] }}" class="product-img">
+
+        <!-- Product Name -->
+        <h5 class="mt-2">{{ product['name'] }}</h5>
+        <!-- Price Display -->
+        {% if product.discount_percent and product.discount_percent > 0 %}
+
+        <p class="fw-bold mb-1">
+          <span class="text-decoration-line-through text-muted small">
+            ₹ {{ product.price }}
+          </span>
+          <span class="text-danger ms-2 fs-5">
+            ₹ {{ product.discounted_price }}
+          </span>
+        </p>
+
+        {% else %}
+
+        <p class="fw-bold">₹ {{ product.price }}</p>
+
+        {% endif %}
+
+        <button class="btn btn-outline-primary w-100 mt-2"
+          onclick="openProductModal(`{{ product.name }}`, `{{ product.price }}`, `{{ product.quantity }}`)">
+          View Details
+        </button>
+
+
+
+        <!-- Stock Conditions -->
+        {% if product.quantity == 0 %}
+        <span class="badge bg-danger mb-2">Out of Stock</span>
+
+        {% elif product.quantity <= 5 %} <span class="badge bg-warning text-dark mb-1">Low Stock</span>
+          <div class="text-danger small fw-semibold">
+            Only {{ product.quantity }} left
+          </div>
+
+          {% else %}
+          <span class="badge bg-success mb-2">In Stock</span>
+          {% endif %}
+
+          <!-- Add to Cart Button -->
+          {% if product.quantity == 0 %}
+          <button class="btn btn-secondary w-100" disabled>
+            Not Available
+          </button>
+          {% else %}
+          <a href="{{ url_for('add_to_cart', name=product.name) }}" class="btn btn-primary w-100">
+            Add to Cart
+          </a>
+          {% endif %}
+
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+
+<!-- Product Details Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 id="modalName" class="modal-title fw-bold"></h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center">
+
+        <img id="modalImage" class="img-fluid mb-3" style="max-height:180px;">
+
+        <h4 class="text-success fw-bold">
+          ₹ <span id="modalPrice"></span>
+        </h4>
+
+        <div id="modalRating" class="mt-2 mb-3" style="font-size: 1.2rem;">
+          ⭐⭐⭐⭐☆ <span class="text-muted small">(125 reviews)</span>
+        </div>
+
+        <p class="text-muted">
+          Available Stock: <span id="modalQty"></span>
+        </p>
+
+        <!-- Description -->
+        <h6 class="fw-bold mt-3">Description</h6>
+        <p id="modalDesc" class="text-muted small"></p>
+
+        <!-- Nutrition Section -->
+        <h6 class="fw-bold mt-3">Nutrition Info</h6>
+        <ul id="modalNutrition" class="small text-start"></ul>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Edit Item Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="post" id="editForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-2">
+            <label>Name</label>
+            <input type="text" name="name" id="edit-name" class="form-control" required>
+          </div>
+
+          <div class="mb-2">
+            <label>Category</label>
+            <input type="text" name="category" id="edit-category" class="form-control">
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Price</label>
+              <input type="number" step="0.01" name="price" id="edit-price" class="form-control">
+            </div>
+            <div class="col">
+              <label>Quantity</label>
+              <input type="number" name="quantity" id="edit-quantity" class="form-control">
+            </div>
+          </div>
+
+          <div class="mt-2">
+            <label>Expiry Date</label>
+            <input type="date" name="expiry_date" id="edit-expiry" class="form-control">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="content-overlay">
+  <!-- ALL your existing homepage content goes here -->
+</div>
+
+
+<script>
+  function openEditModal(id, name, category, price, quantity, expiry) {
+    document.getElementById('edit-name').value = name || '';
+    document.getElementById('edit-category').value = category || '';
+    document.getElementById('edit-price').value = price || 0;
+    document.getElementById('edit-quantity').value = quantity || 0;
+    document.getElementById('edit-expiry').value = expiry || '';
+
+    // Set form action dynamically
+    document.getElementById('editForm').action = '/edit/' + id;
+
+    var modal = new bootstrap.Modal(document.getElementById('editModal'));
+    modal.show();
+  }
+</script>
+
+<script>
+  function resetFilter() {
+    $('#inventoryTable').DataTable().search('').draw();
+  }
+
+  function filterExpired() {
+    $('#inventoryTable').DataTable().rows().every(function () {
+      const show = this.node().dataset.expired === 'yes';
+      this.nodes().to$().toggle(show);
+    });
+  }
+
+  function filterExpiring() {
+    $('#inventoryTable').DataTable().rows().every(function () {
+      const show = this.node().dataset.expiring === 'yes';
+      this.nodes().to$().toggle(show);
+    });
+  }
+
+  function filterLowStock() {
+    $('#inventoryTable').DataTable().rows().every(function () {
+      const show = this.node().dataset.lowstock === 'yes';
+      this.nodes().to$().toggle(show);
+    });
+  }
+</script>
+
+<script>
+  const searchBox = document.getElementById("searchBox");
+  const suggestionBox = document.getElementById("suggestions");
+
+  searchBox.addEventListener("input", function () {
+    let query = this.value.trim();
+
+    if (query.length === 0) {
+      suggestionBox.style.display = "none";
+      return;
+    }
+
+    fetch(`/suggest?q=${query}`)
+      .then(res => res.json())
+      .then(data => {
+        suggestionBox.innerHTML = "";
+
+        if (data.length === 0) {
+          suggestionBox.style.display = "none";
+          return;
+        }
+
+        data.forEach(item => {
+          let li = document.createElement("li");
+          li.classList.add("list-group-item", "list-group-item-action");
+          li.innerHTML = item;
+
+          // When user clicks a suggestion → go to search result
+          li.onclick = () => {
+            window.location.href = `/?search=${item}`;
+          };
+
+          suggestionBox.appendChild(li);
+        });
+
+        suggestionBox.style.display = "block";
+      });
+  });
+
+  // Hide suggestion box when clicking outside
+  document.addEventListener("click", function (e) {
+    if (!searchBox.contains(e.target)) {
+      suggestionBox.style.display = "none";
+    }
+  });
+</script>
+
+<script>
+  function openProductModal(name, price, qty) {
+
+    document.getElementById("modalName").innerHTML = name;
+    document.getElementById("modalPrice").innerHTML = price;
+    document.getElementById("modalQty").innerHTML = qty;
+
+    document.getElementById("modalImage").src = `/static/images/${name.toLowerCase().replace(/ /g, '')}.png`;
+
+    // Load Description
+    if (productInfo[name]) {
+      document.getElementById("modalDesc").innerHTML = productInfo[name].description;
+    } else {
+      document.getElementById("modalDesc").innerHTML = "No description available.";
+    }
+
+    // Load Nutrition
+    const nutritionList = document.getElementById("modalNutrition");
+    nutritionList.innerHTML = "";
+
+    if (productInfo[name] && productInfo[name].nutrition.length) {
+      productInfo[name].nutrition.forEach(n => {
+        nutritionList.innerHTML += `<li>✔ ${n}</li>`;
+      });
+    } else {
+      nutritionList.innerHTML = "<li>No nutrition data available.</li>";
+    }
+
+    let modal = new bootstrap.Modal(document.getElementById("productModal"));
+    modal.show();
+  }
+</script>
+
+
+<script>
+  const productRatings = {
+    "Apple": { stars: "⭐⭐⭐⭐⭐", reviews: 152 },
+    "Milk": { stars: "⭐⭐⭐⭐", reviews: 87 },
+    "Spinach": { stars: "⭐⭐⭐⭐⭐", reviews: 210 },
+    "Bread": { stars: "⭐⭐⭐", reviews: 45 }
+  };
+</script>
+
+<script>
+  const productInfo = {
+    // Dairy
+    "Milk": {
+      description: "Pure and fresh dairy milk sourced from trusted farms.",
+      nutrition: [
+        "High in Calcium",
+        "Rich in Protein",
+        "Strengthens bones",
+        "Good source of Vitamin D"
+      ]
+    },
+    "Butter": {
+      description: "Smooth, creamy butter made from pure churned cream. Perfect for cooking, baking, and spreading.",
+      nutrition: [
+        "Rich in healthy fats",
+        "Good source of Vitamin A",
+        "Enhances flavor naturally",
+        "Contains essential fatty acids"
+      ]
+    },
+    "Cheese": {
+      description: "Soft, rich cheese crafted from high-quality milk. Ideal for sandwiches, pizzas, and snacking.",
+      nutrition: [
+        "High in protein",
+        "Good source of calcium",
+        "Rich in Vitamin B12",
+        "Strengthens bones and teeth"
+      ]
+    },
+    "Curd": {
+      description: "Fresh, thick and creamy curd made from cultured milk. Great for digestion and immunity.",
+      nutrition: [
+        "Loaded with probiotics",
+        "High in protein",
+        "Improves digestion",
+        "Strengthens gut health"
+      ]
+    },
+    "Paneer": {
+      description: "Soft and fresh paneer made from pure cow milk. Perfect for curries, grilling, and healthy snacking.",
+      nutrition: [
+        "High-quality protein",
+        "Rich in calcium",
+        "Low in carbs",
+        "Great for muscle building"
+      ]
+    },
+    "Ghee": {
+      description: "Pure golden ghee made using traditional methods. Adds aroma, taste, and nutrition to food.",
+      nutrition: [
+        "Rich in healthy fats",
+        "Boosts immunity",
+        "Supports digestion",
+        "Good source of Vitamin A & E"
+      ]
+    },
+    "Yogurt Cup": {
+      description: "Smooth, creamy yogurt packed with live cultures. Perfect for a refreshing snack, breakfast bowl, or digestive boost.",
+      nutrition: [
+        "Rich in probiotics",
+        "High in calcium",
+        "Supports gut health",
+        "Good source of protein"
+      ]
+    },
+
+    // Fruits
+    "Apple": {
+      description: "Fresh, juicy apples packed with natural sweetness. Perfect for snacking, juices, and salads.",
+      nutrition: [
+        "Rich in dietary fiber",
+        "Boosts immunity",
+        "Good source of Vitamin C",
+        "Supports heart health"
+      ]
+    },
+    "Mango": {
+      description: "Sweet, aromatic mangoes handpicked for perfect ripeness. Ideal for smoothies, desserts, and fresh eating.",
+      nutrition: [
+        "High in Vitamin A",
+        "Rich in antioxidants",
+        "Good for skin and eyes",
+        "Natural energy booster"
+      ]
+    },
+    "Grapes": {
+      description: "Fresh, seedless green grapes with a crisp bite and natural sweetness.",
+      nutrition: [
+        "High in antioxidants",
+        "Supports heart health",
+        "Good source of hydration",
+        "Contains natural sugars"
+      ]
+    },
+    "Banana": {
+      description: "Naturally sweet, energy-boosting bananas perfect for smoothies, snacking, and breakfast bowls.",
+      nutrition: [
+        "Rich in potassium",
+        "Boosts instant energy",
+        "Good for digestion",
+        "Contains Vitamin B6"
+      ]
+    },
+    "Orange": {
+      description: "Bright, juicy oranges filled with refreshing citrus flavor and natural Vitamin C.",
+      nutrition: [
+        "Excellent source of Vitamin C",
+        "Boosts immunity",
+        "Rich in antioxidants",
+        "Hydrating and refreshing"
+      ]
+    },
+    "Pineapple": {
+      description: "Sweet and tangy pineapple slices packed with tropical flavor and natural digestive enzymes.",
+      nutrition: [
+        "Contains bromelain (good for digestion)",
+        "High in Vitamin C",
+        "Supports immunity",
+        "Rich in manganese"
+      ]
+    },
+    "Kiwi": {
+      description: "Zesty, nutrient-rich kiwi with a perfect balance of sweetness and tang. A powerhouse of vitamins.",
+      nutrition: [
+        "Extremely high in Vitamin C",
+        "Rich in antioxidants",
+        "Supports digestion",
+        "Boosts immune strength"
+      ]
+    },
+
+    // Vegetables
+    "Carrot": {
+      description: "Fresh, crunchy carrots rich in natural sweetness. Perfect for salads, cooking, and healthy snacking.",
+      nutrition: [
+        "High in Vitamin A",
+        "Good for eyesight",
+        "Boosts immunity",
+        "Rich in antioxidants"
+      ]
+    },
+    "Tomato": {
+      description: "Juicy, farm-fresh tomatoes with rich flavor. Ideal for curries, salads, chutneys, and sauces.",
+      nutrition: [
+        "Rich in Vitamin C",
+        "Contains lycopene",
+        "Supports heart health",
+        "Low calorie & hydrating"
+      ]
+    },
+    "Onion": {
+      description: "Fresh onions with strong flavor and crisp texture. A kitchen essential for cooking and seasoning.",
+      nutrition: [
+        "Contains antioxidants",
+        "Supports immunity",
+        "Good source of fiber",
+        "Helps digestion"
+      ]
+    },
+    "Potato": {
+      description: "Premium-quality potatoes with perfect texture for frying, mashing, boiling, and daily cooking.",
+      nutrition: [
+        "Rich in carbohydrates",
+        "Provides instant energy",
+        "Contains potassium",
+        "Good source of Vitamin B6"
+      ]
+    },
+    "Spinach": {
+      description: "Fresh green spinach leaves loaded with essential nutrients. Perfect for curries, soups, and healthy meals.",
+      nutrition: [
+        "High in iron",
+        "Rich in Vitamin K",
+        "Supports bone health",
+        "Excellent antioxidant source"
+      ]
+    },
+    "Cauliflower": {
+      description: "Fresh cauliflower with crisp florets. Perfect for curries, snacks, soups, and roasting.",
+      nutrition: [
+        "High in fiber",
+        "Rich in Vitamin C",
+        "Supports digestion",
+        "Low carb vegetable"
+      ]
+    },
+    "Cabbage": {
+      description: "Clean, fresh green cabbage with crunchy texture. Suitable for salads, stir-fries, and curries.",
+      nutrition: [
+        "Rich in Vitamin K",
+        "High in fiber",
+        "Boosts digestion",
+        "Good for immunity"
+      ]
+    },
+
+    // Bakery
+    "Bread": {
+      description: "Soft and freshly baked bread made from refined flour. Perfect for sandwiches, toast, and quick snacks.",
+      nutrition: [
+        "Good source of carbohydrates",
+        "Provides quick energy",
+        "Low fat",
+        "Enriched with essential vitamins"
+      ]
+    },
+    "Brown Bread": {
+      description: "Healthy whole-wheat brown bread baked with natural fiber. Ideal for weight-friendly meals.",
+      nutrition: [
+        "High in dietary fiber",
+        "Supports digestion",
+        "Lower calories than white bread",
+        "Good for heart health"
+      ]
+    },
+    "Garlic Bread": {
+      description: "Delicious garlic-flavored bread with buttery richness. Great as a snack or meal starter.",
+      nutrition: [
+        "Contains healthy fats",
+        "Source of carbohydrates",
+        "Garlic supports immunity",
+        "Provides instant energy"
+      ]
+    },
+    "Cake": {
+      description: "Moist and soft cake baked to perfection. The perfect treat for celebrations and dessert lovers.",
+      nutrition: [
+        "Source of carbohydrates",
+        "Contains small amounts of fats",
+        "Provides quick energy",
+        "Sweet and satisfying"
+      ]
+    },
+    "Bun": {
+      description: "Soft and fresh pav buns baked daily. Perfect for pav-bhaji, vada-pav, and homemade snacks.",
+      nutrition: [
+        "Good source of carbs",
+        "Light and fluffy texture",
+        "Low fat",
+        "Provides instant energy"
+      ]
+    },
+    "Toast": {
+      description: "Crunchy and golden-baked rusks, perfect for tea-time snacking.",
+      nutrition: [
+        "Low moisture",
+        "Contains fiber",
+        "Keeps you full",
+        "Light and crispy"
+      ]
+    },
+    "Cookies": {
+      description: "Freshly baked cookies with rich flavor. Perfect for snacking anytime.",
+      nutrition: [
+        "Contains carbohydrates",
+        "Provides quick energy",
+        "Slightly sweet",
+        "Source of fats"
+      ]
+    },
+
+    // Drinks
+    "Lemon Juice": {
+      description: "Refreshing lemon juice with natural citrus flavor. Perfect for hydration and quick refreshment.",
+      nutrition: [
+        "Rich in Vitamin C",
+        "Boosts immunity",
+        "Helps digestion",
+        "Hydrating and low calorie"
+      ]
+    },
+    "Cold Coffee Can": {
+      description: "Chilled and creamy cold coffee with a smooth café-style taste. Perfect for an instant energy boost.",
+      nutrition: [
+        "Contains caffeine",
+        "Provides energy",
+        "Good source of carbs",
+        "Refreshing beverage"
+      ]
+    },
+    "Fruit Juice": {
+      description: "Refreshing mixed fruit juice with natural sweetness. Great for hydration and instant energy.",
+      nutrition: [
+        "Contains natural fruit sugars",
+        "Rich in Vitamin C",
+        "Provides hydration",
+        "Good source of antioxidants"
+      ]
+    },
+    "Coke": {
+      description: "Classic Coca-Cola with its bold, refreshing taste. Perfect for meals, parties, and instant refreshment.",
+      nutrition: [
+        "Provides quick energy",
+        "Contains simple carbohydrates",
+        "Refreshing carbonation",
+        "Best enjoyed chilled"
+      ]
+    },
+    "Sprite": {
+      description: "Lemon-lime flavored carbonated drink with a crisp and refreshing taste. Ideal for hot weather and quick refreshment.",
+      nutrition: [
+        "Contains natural lemon-lime flavor",
+        "Provides instant energy",
+        "Smooth & light carbonation",
+        "Hydrating temporarily"
+      ]
+    },
+    "Water Bottle": {
+      description: "Clean and purified drinking water packed with essential minerals. Perfect for daily hydration.",
+      nutrition: [
+        "Zero calories",
+        "Essential minerals",
+        "Keeps body hydrated",
+        "Suitable for all ages"
+      ]
+    }
+
+  };
+</script>
+
+
+{% endblock %}

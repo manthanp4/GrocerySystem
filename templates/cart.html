@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Your Cart{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+  <h3 class="fw-bold mb-4">
+    🛒 Your Cart
+  </h3>
+
+  {% if cart_items %}
+  <div class="card shadow-sm">
+    <div class="card-body">
+
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Item</th>
+            <th class="text-center">Price</th>
+            <th class="text-center">Qty</th>
+            <th class="text-end">Subtotal</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for item in cart_items %}
+          <tr>
+            <td class="fw-semibold">{{ item.name }}</td>
+
+            <td class="text-center">
+              {% if item.discount > 0 %}
+              <span class="text-danger fw-bold">₹ {{ item.discounted_price }}</span><br>
+              <small class="text-muted"><s>₹ {{ item.price }}</s> ({{ item.discount }}% OFF)</small>
+              {% else %}
+              ₹ {{ item.price }}
+              {% endif %}
+            </td>
+
+
+            <td class="text-center">
+              <div class="d-flex justify-content-center align-items-center gap-2">
+                <a href="/decrease/{{ item.name }}" class="btn btn-sm btn-outline-secondary">−</a>
+                <span class="fw-bold">{{ item.quantity }}</span>
+                <a href="/increase/{{ item.name }}" class="btn btn-sm btn-outline-secondary">+</a>
+              </div>
+            </td>
+
+            <td class="text-end fw-semibold">
+              ₹ {{ item.subtotal }}
+            </td>
+
+            <td class="text-center">
+              <a href="/remove/{{ item.name }}" class="btn btn-sm btn-outline-danger">
+                Remove
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <hr>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">
+          Total: ₹ {{ total }}
+        </h5>
+
+        <a href="/checkout" class="btn btn-success px-4">
+          Checkout
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  {% else %}
+  <div class="alert alert-info">
+    Your cart is empty.
+  </div>
+  {% endif %}
+
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{{ url_for('index') }}" class="btn btn-primary">
+      ← Continue Shopping
+    </a>
+  </div>
+</div>
+{% endblock %}

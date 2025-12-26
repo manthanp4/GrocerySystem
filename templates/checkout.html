@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h3 class="fw-bold mb-4">🧾 Checkout</h3>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="fw-bold">Order Summary</h5>
+            <table class="table mt-3">
+                <thead class="table-light">
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>₹ {{ item.price }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹ {{ item.price * item.quantity }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <hr>
+
+            <h4 class="text-end fw-bold">
+                Total Amount: ₹ {{ total }}
+            </h4>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <h5 class="fw-bold mb-3">Customer Details</h5>
+
+            <form id="checkoutForm" action="/place-order" method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input name="name" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input name="phone" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Delivery Address</label>
+                    <textarea name="address" class="form-control" required></textarea>
+                </div>
+
+                <button type="button" class="btn btn-success w-100 mt-3" data-bs-toggle="modal"
+                    data-bs-target="#confirmOrderModal">
+                    ✔ Place Order
+                </button>
+
+
+                <a href="/cart" class="btn btn-outline-danger w-100 mt-2">
+                    Cancel Order & Return to Cart
+                </a>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Order Confirmation Modal -->
+<div class="modal fade" id="confirmOrderModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Confirm Your Order</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <p>Are you sure you want to place this order?</p>
+        <p class="fw-bold text-success">Total: ₹ {{ total }}</p>
+      </div>
+
+      <div class="modal-footer">
+        <!-- Cancel -->
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          No, Go Back
+        </button>
+
+        <!-- YES CONFIRM ORDER -->
+        <button type="submit" form="checkoutForm" class="btn btn-success">
+          Yes, Place Order ✔
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

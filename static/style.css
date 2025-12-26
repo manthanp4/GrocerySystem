@@ -1,0 +1,125 @@
+.product-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+.product-img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin: auto;
+}
+
+.price {
+  font-weight: bold;
+  color: #1a7f37;
+}
+
+.category-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-behavior: smooth;
+}
+
+.category-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.category-scroll::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.product-card-wrapper {
+  flex: 0 0 220px;
+}
+
+.product-card {
+  border-radius: 16px;
+  background: #fff;
+}
+
+.product-img {
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+}
+
+.text-danger.small {
+  font-size: 0.85rem;
+}
+
+
+body {
+    background-image: url("/static/images/grocery-newbg.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.discount-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #ff3333;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 14px;
+  z-index: 15;
+}
+
+.product-card {
+    position: relative;
+}
+
+/* --- Delivery Truck Animation --- */
+.delivery-animation {
+  position: relative;
+  width: 100%;
+  height: 120px;
+}
+
+.road {
+  width: 100%;
+  height: 4px;
+  background: #aaa;
+  position: absolute;
+  bottom: 20px;
+}
+
+.truck img {
+  width: 120px;
+  position: absolute;
+  bottom: 25px;
+  animation: drive 3s linear infinite;
+}
+
+@keyframes drive {
+  0% { left: -150px; }
+  100% { left: 100%; }
+}
+
+.full-search {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 18px;
+    font-size: 1rem;
+    border-radius: 10px;
+}
+
+.search-container {
+    width: 100%;
+    padding: 0 50px; /* Adjust left-right spacing */
+}
